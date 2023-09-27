@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class Main {
@@ -44,7 +45,11 @@ public class Main {
         stringList.add("/Users/timofejzabolotko/Games/savegames/game3.dat");
 
         zipFiles("/Users/timofejzabolotko/Games/savegames/gamesaved.zip", stringList);
-
+        //unzipFiles("/Users/timofejzabolotko/Games/savegames/gamesaved.zip");
+        String zpath = "/Users/timofejzabolotko/Games/savegames/gamesaved.zip";
+        String upath = "/Users/timofejzabolotko/Games/savegames/";
+        openZip(zpath,upath);
+        openProgress("/Users/timofejzabolotko/Games/savegames/game1.dat");
     }
 
     public static void makeNewDir(String path, String name) {
@@ -84,20 +89,83 @@ public class Main {
         try (ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(zpath))) {
             for (String s : path) {
                 try (FileInputStream fis = new FileInputStream(s)) {
-                    ZipEntry entry = new ZipEntry("packed_" + s);
+                    ZipEntry entry = new ZipEntry(s);
                     zout.putNextEntry(entry);
                     byte[] buffer = new byte[fis.available()];
                     fis.read(buffer);
-                    File datfile = new File(s);
-                    datfile.delete();
+                    zout.write(buffer);
+                    zout.closeEntry();
+                   deleteFile(s);
                 }catch (Exception ex) {
                     System.out.println(ex.getMessage());
                 }
             }
-            zout.closeEntry();
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
 
     }
+public static void deleteFile (String path){
+    File datfile = new File(path);
+    datfile.delete();
+}
+    /*public static void unzipFiles (String zpath) {
+        try (ZipInputStream zin = new ZipInputStream(new FileInputStream(zpath))) {
+            ZipEntry entry;
+            String name;
+            while ((entry = zin.getNextEntry()) != null) {
+                name = entry.getName(); // получим название файла
+                System.out.println("имя файла внутри архива = " + name);
+                // распаковка
+                FileOutputStream fout = new FileOutputStream(name);
+                for (int c = zin.read(); c != -1; c = zin.read()) {
+                    fout.write(c);
+                }
+                fout.flush();
+                zin.closeEntry();
+                fout.close();
+                //проверка объекта в распакованном файл
+                FileInputStream fis = new FileInputStream(name);
+                ObjectInputStream objectInputStream = new ObjectInputStream(fis);
+                GameProgress gp = (GameProgress) objectInputStream.readObject();
+                System.out.println(gp.toString());
+                System.out.println();
+            }
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage()); }
+    }
+*/
+public static void openZip(String zpath, String upath) {
+    try (ZipInputStream zin = new ZipInputStream(new FileInputStream(zpath))) {
+        ZipEntry entry;
+        String name;
+        while ((entry = zin.getNextEntry()) != null) {
+            name = entry.getName(); // получим название файла
+            System.out.println("имя файла внутри архива = " + name);
+            // распаковка
+            FileOutputStream fout = new FileOutputStream(name);
+            for (int c = zin.read(); c != -1; c = zin.read()) {
+                fout.write(c);
+            }
+            fout.flush();
+            zin.closeEntry();
+            fout.close();
+        }
+    } catch (Exception ex) {
+        System.out.println(ex.getMessage()); }
+}
+
+    public static void openProgress(String path) {
+        try {
+            FileInputStream fileInputStream = new FileInputStream(path);
+            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+            GameProgress gp = (GameProgress) objectInputStream.readObject();
+            System.out.println(gp.toString());
+            System.out.println();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+
+        }
+    }
+
 }
